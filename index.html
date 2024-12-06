@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-8 max-w-2xl">
+        <h1 class="text-3xl font-bold mb-8">Travel Planner</h1>
+        
+        <form id="travelForm" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2" for="location">Location</label>
+                <input type="text" id="location" required
+                    class="w-full p-2 border rounded">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2" for="budget">Budget ($)</label>
+                <input type="number" id="budget" required
+                    class="w-full p-2 border rounded">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2" for="days">Number of Days</label>
+                <input type="number" id="days" required
+                    class="w-full p-2 border rounded">
+            </div>
+            
+            <button type="submit" 
+                class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">
+                Generate Itinerary
+            </button>
+        </form>
+        
+        <div id="loading" class="hidden mt-4 text-center">
+            Generating itinerary...
+        </div>
+        
+        <div id="result" class="mt-8 bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-bold mb-4">Your Itinerary</h2>
+            <pre id="itinerary" class="whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('travelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const itineraryDiv = document.getElementById('itinerary');
+            
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            
+            const data = {
+                location: document.getElementById('location').value,
+                budget: parseFloat(document.getElementById('budget').value),
+                days: parseInt(document.getElementById('days').value)
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8000/generate-itinerary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result_data = await response.json();
+                itineraryDiv.textContent = result_data.itinerary;
+                result.classList.remove('hidden');
+            } catch (error) {
+                alert('Error generating itinerary: ' + error);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
