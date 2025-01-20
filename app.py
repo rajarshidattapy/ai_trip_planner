@@ -1,12 +1,12 @@
-from anthropic import Anthropic
+from google.generativeai import palm
 from typing import Dict
 import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-# Configure Claude API
-anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+# Configure Gemini API (PaLM 2)
+palm.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
 class TravelRequest(BaseModel):
     location: str
@@ -36,17 +36,16 @@ def generate_prompt(location: str, budget: float, days: int) -> str:
 
 async def get_itinerary(location: str, budget: float, days: int) -> str:
     try:
-        message = await anthropic.messages.create(
-            model="claude-3-sonnet-20240229",
-            max_tokens=4000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": generate_prompt(location, budget, days)
-                }
-            ]
+        response = palm.generate_text(
+            model="text-bison-001",  # Free-tier PaLM 2 model
+            prompt=generate_prompt(location, budget, days),
+            temperature=0.7,
+            max_output_tokens=4000
         )
-        return message.content[0].text
+        if response.result:
+            return response.result
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate response.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
